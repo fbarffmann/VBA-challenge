@@ -1,0 +1,121 @@
+Attribute VB_Name = "Module3"
+Sub refresh()
+    Dim ws As Worksheet
+    For Each ws In Worksheets
+        ' Delete columns 9-17 (columns I-R)
+        ws.Range(ws.Columns(9), ws.Columns(17)).Delete
+    Next ws
+End Sub
+
+Sub multiyearstock_analysis()
+    Dim ws As Worksheet
+    Dim OpenPrice As Variant
+    Dim ClosePrice As Variant
+    Dim QuarterlyChange As Variant
+    Dim PercentChange As Variant
+    Dim Summary_Table_Row As Long
+    Dim LastRow As Long
+    Dim LastTicker As Long
+    Dim MaxPercent As Double
+    Dim MinPercent As Double
+    Dim greatestIncrease As Double
+    Dim greatestDecrease As Double
+    Dim greatestIncreaseTicker As String
+    Dim greatestDecreaseTicker As String
+    Dim Ticker As String
+    Dim Volume As Variant
+    Dim MaxVolume As Double
+    Dim greatestVolume As Double
+    Dim greatestVolumeTicker As String
+    
+    ' Quarterly Change and Percent Change Calculation
+    For Each ws In ActiveWorkbook.Worksheets
+        Summary_Table_Row = 2
+        OpenPrice = ws.Cells(2, 3).Value
+        ws.Cells(1, "J").Value = "Quarterly Change"
+        ws.Cells(1, "K").Value = "Percent Change"
+        LastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+        
+        For i = 2 To LastRow
+            If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+                ClosePrice = ws.Cells(i, 6).Value
+                QuarterlyChange = ClosePrice - OpenPrice
+                ws.Cells(Summary_Table_Row, 10).Value = QuarterlyChange
+                
+                ' Conditional formatting based on Quarterly Change
+                If QuarterlyChange > 0 Then
+                    ws.Cells(Summary_Table_Row, 10).Interior.ColorIndex = 4
+                ElseIf QuarterlyChange < 0 Then
+                    ws.Cells(Summary_Table_Row, 10).Interior.ColorIndex = 3
+                ElseIf QuarterlyChange = 0 Then
+                    ws.Cells(Summary_Table_Row, 10).Interior.ColorIndex = 0
+                End If
+                
+                ' Calculate Percent Change
+                If OpenPrice = 0 Then
+                    PercentChange = 0
+                Else
+                    PercentChange = QuarterlyChange / OpenPrice
+                End If
+                
+                ' Assign values to summary table
+                ws.Cells(Summary_Table_Row, 11).Value = Format(PercentChange, "Percent")
+                ws.Cells(Summary_Table_Row, 10).Value = QuarterlyChange
+                Summary_Table_Row = Summary_Table_Row + 1
+                
+                ' Update OpenPrice for next ticker
+                OpenPrice = ws.Cells(i + 1, 3).Value
+            End If
+        Next i
+        
+        ' Calculate Greatest Increase and Greatest Decrease
+        LastTicker = ws.Cells(ws.Rows.Count, 9).End(xlUp).Row
+        MaxPercent = WorksheetFunction.Max(ws.Range("K2:K" & LastTicker))
+        MinPercent = WorksheetFunction.Min(ws.Range("K2:K" & LastTicker))
+        greatestIncrease = WorksheetFunction.Match(MaxPercent, ws.Range("K2:K" & LastTicker), 0)
+        greatestIncreaseTicker = ws.Cells(greatestIncrease + 1, 9).Value
+        greatestDecrease = WorksheetFunction.Match(MinPercent, ws.Range("K2:K" & LastTicker), 0)
+        greatestDecreaseTicker = ws.Cells(greatestDecrease + 1, 9).Value
+
+        ' Assign values for Greatest % Increase and Greatest % Decrease
+        ws.Cells(2, 16).Value = greatestIncreaseTicker
+        ws.Cells(3, 16).Value = greatestDecreaseTicker
+        ws.Cells(2, 17).Value = Format(MaxPercent, "Percent")
+        ws.Cells(3, 17).Value = Format(MinPercent, "Percent")
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(1, 16).Value = "Ticker"
+        ws.Cells(1, 17).Value = "Value"
+        
+
+        
+        ' Ticker Volume Calculation
+        Summary_Table_Row = 2
+        ws.Cells(1, "I").Value = "Ticker"
+        ws.Cells(1, "L").Value = "Volume"
+        LastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+        
+        For i = 2 To LastRow
+            If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+                Ticker = ws.Cells(i, 1).Value
+                Volume = Volume + ws.Cells(i, 7).Value
+                ws.Range("I" & Summary_Table_Row).Value = Ticker
+                ws.Range("L" & Summary_Table_Row).Value = Volume
+                Summary_Table_Row = Summary_Table_Row + 1
+                Volume = 0
+            Else
+                Volume = Volume + ws.Cells(i, 7).Value
+            End If
+        Next i
+        
+        ' Calculate Greatest Total Volume
+        LastTicker = ws.Cells(ws.Rows.Count, 9).End(xlUp).Row
+        MaxVolume = WorksheetFunction.Max(ws.Range("L2:L" & LastTicker))
+        greatestVolume = WorksheetFunction.Match(MaxVolume, ws.Range("L2:L" & LastTicker), 0)
+        greatestVolumeTicker = ws.Cells(greatestVolume + 1, 9).Value
+        ws.Cells(4, 17).Value = MaxVolume
+        ws.Cells(4, 16).Value = greatestVolumeTicker
+        ws.Cells(4, 15).Value = "Greatest Total Volume"
+    Next ws
+End Sub
+
