@@ -19,9 +19,9 @@ The VBA script automates the following tasks:
 - Excel Conditional Formatting
 - Excel Formulas & Functions
 
-
 ## File Structure
-```
+
+```text
 Resources/
 ├── Multiple_year_stock_data.xlsm - Main Excel workbook with VBA code
 ├── alphabetical_testing.xlsx - Data file for testing
@@ -56,7 +56,3 @@ Visualizations of the summary output per quarter:
 - Automating stock analysis saves time and reduces errors compared to manual calculations.
 - VBA is powerful for data manipulation and reporting within Excel.
 - Visualizing stock performance across multiple years provides clearer insights for decision making.
-
----
-
-
